@@ -360,13 +360,13 @@
                 <p>Enter the chemical composition values below to classify your wine sample into one of three cultivars. Our machine learning model analyzes 13 chemical properties to provide accurate classification.</p>
             </div>
 
-            <div class="example-section">
+            <div class="example-buttons">
                 <h3 style="text-align: center; margin-bottom: 20px; color: #333;">Try Example Data</h3>
                 <p style="text-align: center; color: #666; margin-bottom: 20px;">Load example data to see how the system works:</p>
                 <div class="example-buttons">
-                    <button class="example-btn" onclick="loadExample('cultivar_0')">Example: Cultivar 1</button>
-                    <button class="example-btn" onclick="loadExample('cultivar_1')">Example: Cultivar 2</button>
-                    <button class="example-btn" onclick="loadExample('cultivar_2')">Example: Cultivar 3</button>
+                    <button class="example-btn" onclick="loadExampleByClass(0)">Example: Cultivar 1</button>
+                    <button class="example-btn" onclick="loadExampleByClass(1)">Example: Cultivar 2</button>
+                    <button class="example-btn" onclick="loadExampleByClass(2)">Example: Cultivar 3</button>
                 </div>
             </div>
 
@@ -484,26 +484,43 @@
     </div>
 
    <script>
-    // Load example data
-    async function loadExample(cultivar) {
-        try {
-            const response = await fetch('/example_data');
-            const examples = await response.json();
-            const data = examples[cultivar];
+    // Function to load a random example matching the specified class (0, 1, or 2)
+async function loadExampleByClass(cultivarClass) {
+    try {
+        const response = await fetch('/example_data');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        let examples = await response.json();
 
-            // Fill form with example data
-            for (const [key, value] of Object.entries(data)) {
-                const input = document.getElementById(key);
-                if (input) {
-                    input.value = value;
-                }
-            }
-
-            showNotification('Example data loaded successfully!', 'success');
-        } catch (error) {
-            showNotification('Failed to load example data', 'error');
+        // Convert object to array if necessary
+        if (!Array.isArray(examples)) {
+            examples = Object.values(examples);
         }
+
+        // Filter examples by class
+        const filtered = examples.filter(item => item.class === cultivarClass);
+        if (filtered.length === 0) {
+            alert(`No examples found for ${CULTIVAR_NAMES[cultivarClass]}`);
+            return;
+        }
+
+        // Select a random example
+        const randIndex = Math.floor(Math.random() * filtered.length);
+        const data = filtered[randIndex];
+
+        // Populate form inputs
+        for (const [key, value] of Object.entries(data)) {
+            const input = document.getElementById(key);
+            if (input) {
+                input.value = value;
+            }
+        }
+
+        showNotification(`Loaded example for ${CULTIVAR_NAMES[cultivarClass]}`, 'success');
+    } catch (error) {
+        console.error('Error loading example:', error);
+        showNotification('Failed to load example data', 'error');
     }
+}
 
     // Clear form
     function clearForm() {

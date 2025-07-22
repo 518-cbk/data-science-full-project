@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import pickle
+import random
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -124,30 +125,43 @@ def predict():
     except Exception as e:
         return jsonify({'error': f'Prediction failed: {str(e)}'})
 
+
+
+# Load the CSV file once at startup
+df = pd.read_csv('wine.csv')
 @app.route('/example_data')
+
 def example_data():
-    """Provide example data for testing"""
-    examples = {
-        'cultivar_0': {
-            'alcohol': 13.20, 'malic_acid': 1.78, 'ash': 2.14, 'alcalinity_of_ash': 11.2,
-            'magnesium': 100, 'total_phenols': 2.65, 'flavanoids': 2.76, 'nonflavanoid_phenols': 0.26,
-            'proanthocyanins': 1.28, 'color_intensity': 4.38, 'hue': 1.05, 'od280_od315_of_diluted_wines': 3.40,
-            'proline': 1050
-        },
-        'cultivar_1': {
-            'alcohol': 12.37, 'malic_acid': 0.94, 'ash': 1.36, 'alcalinity_of_ash': 10.6,
-            'magnesium': 88, 'total_phenols': 1.98, 'flavanoids': 0.57, 'nonflavanoid_phenols': 0.28,
-            'proanthocyanins': 0.42, 'color_intensity': 1.95, 'hue': 1.05, 'od280_od315_of_diluted_wines': 1.82,
-            'proline': 520
-        },
-        'cultivar_2': {
-            'alcohol': 12.86, 'malic_acid': 1.35, 'ash': 2.32, 'alcalinity_of_ash': 18.0,
-            'magnesium': 122, 'total_phenols': 1.51, 'flavanoids': 1.25, 'nonflavanoid_phenols': 0.21,
-            'proanthocyanins': 0.94, 'color_intensity': 4.1, 'hue': 0.76, 'od280_od315_of_diluted_wines': 1.29,
-            'proline': 630
-        }
-    }
-    return jsonify(examples)
+    try:
+        # Number of samples to return
+        num_samples = 3
+
+        # Sample rows from DataFrame
+        sampled_df = df.sample(n=num_samples).reset_index(drop=True)
+
+        examples = {}
+        for idx, row in sampled_df.iterrows():
+            example = {
+                'alcohol': row['alcohol'],
+                'malic_acid': row['malic_acid'],
+                'ash': row['ash'],
+                'alcalinity_of_ash': row['alcalinity_of_ash'],
+                'magnesium': row['magnesium'],
+                'total_phenols': row['total_phenols'],
+                'flavanoids': row['flavanoids'],
+                'nonflavanoid_phenols': row['nonflavanoid_phenols'],
+                'proanthocyanins': row['proanthocyanins'],
+                'color_intensity': row['color_intensity'],
+                'hue': row['hue'],
+                'od280_od315_of_diluted_wines': row['od280_od315_of_diluted_wines'],
+                'proline': row['proline']
+            }
+            examples[f'cultivar_{idx}'] = example
+
+        return jsonify(examples)
+    except Exception as e:
+        # Return error message for debugging
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
